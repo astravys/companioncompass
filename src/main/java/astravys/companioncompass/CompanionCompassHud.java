@@ -11,8 +11,8 @@ import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -25,8 +25,7 @@ import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 public final class CompanionCompassHud {
     private static final int SCALE_WIDTH = 182;
     private static final int SCALE_HEIGHT = 5;
-    private static final int SCALE_COLOR = 0x8A101010;
-    private static final int SCALE_EDGE_COLOR = 0xA0303030;
+    private static final ResourceLocation EXPERIENCE_BAR_BACKGROUND = ResourceLocation.withDefaultNamespace("hud/experience_bar_background");
     private static final int OUTLINE_COLOR = 0xFF101010;
     private static final Map<UUID, SmoothMarker> SMOOTH_MARKERS = new HashMap<>();
 
@@ -54,7 +53,7 @@ public final class CompanionCompassHud {
             return;
         }
 
-        List<AbstractClientPlayer> players = ClientPlayerFinder.findOtherPlayers(minecraft);
+        List<TrackedPlayer> players = ClientPlayerFinder.findOtherPlayers(minecraft);
         if (players.isEmpty()) {
             SMOOTH_MARKERS.clear();
             return;
@@ -81,12 +80,10 @@ public final class CompanionCompassHud {
         int screenWidth = guiGraphics.guiWidth();
         int screenHeight = guiGraphics.guiHeight();
         int left = screenWidth / 2 - SCALE_WIDTH / 2;
-        int centerY = screenHeight - 32 + 3;
-        int top = centerY - SCALE_HEIGHT / 2;
+        int top = screenHeight - 32 + 3;
+        int centerY = top + SCALE_HEIGHT / 2;
 
-        guiGraphics.fill(left, top, left + SCALE_WIDTH, top + SCALE_HEIGHT, SCALE_COLOR);
-        guiGraphics.fill(left, top, left + 1, top + SCALE_HEIGHT, SCALE_EDGE_COLOR);
-        guiGraphics.fill(left + SCALE_WIDTH - 1, top, left + SCALE_WIDTH, top + SCALE_HEIGHT, SCALE_EDGE_COLOR);
+        guiGraphics.blitSprite(EXPERIENCE_BAR_BACKGROUND, left, top, SCALE_WIDTH, SCALE_HEIGHT);
 
         Set<UUID> visibleIds = new HashSet<>();
         for (CompassMarker marker : markers) {
@@ -104,29 +101,20 @@ public final class CompanionCompassHud {
     }
 
     private static void drawMarker(GuiGraphics guiGraphics, int centerX, int centerY, float size, int outlineColor, int fillColor) {
-        drawMarkerShape(guiGraphics, centerX - 1, centerY, size, outlineColor);
-        drawMarkerShape(guiGraphics, centerX + 1, centerY, size, outlineColor);
-        drawMarkerShape(guiGraphics, centerX, centerY - 1, size, outlineColor);
-        drawMarkerShape(guiGraphics, centerX, centerY + 1, size, outlineColor);
-        drawMarkerShape(guiGraphics, centerX, centerY, size, fillColor);
+        int radius = Math.max(2, Math.round(size / 2.0F));
+        drawCircle(guiGraphics, centerX, centerY, radius + 1, outlineColor);
+        drawCircle(guiGraphics, centerX, centerY, radius, fillColor);
     }
 
-    private static void drawMarkerShape(GuiGraphics guiGraphics, int centerX, int centerY, float size, int color) {
-        int width = Math.max(4, Math.round(size));
-        int height = Math.max(3, Math.round(size * 0.72F));
-        int[] rowWidths = { 3, 5, 7, 7, 5, 3 };
-
-        for (int row = 0; row < rowWidths.length; row++) {
-            int y0 = centerY - height / 2 + Math.round(row * height / 6.0F);
-            int y1 = centerY - height / 2 + Math.round((row + 1) * height / 6.0F);
-            if (y1 <= y0) {
-                y1 = y0 + 1;
+    private static void drawCircle(GuiGraphics guiGraphics, int centerX, int centerY, int radius, int color) {
+        int radiusSquared = radius * radius;
+        for (int y = -radius; y <= radius; y++) {
+            int x = 0;
+            while (x * x + y * y <= radiusSquared) {
+                x++;
             }
-
-            int rowWidth = Math.max(1, Math.round(width * rowWidths[row] / 7.0F));
-            int x0 = centerX - rowWidth / 2;
-            int x1 = x0 + rowWidth;
-            guiGraphics.fill(x0, y0, x1, y1, color);
+            int halfWidth = x - 1;
+            guiGraphics.fill(centerX - halfWidth, centerY + y, centerX + halfWidth + 1, centerY + y + 1, color);
         }
     }
 

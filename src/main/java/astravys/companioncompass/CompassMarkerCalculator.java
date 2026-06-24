@@ -5,7 +5,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
-import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
@@ -18,12 +17,12 @@ public final class CompassMarkerCalculator {
     private CompassMarkerCalculator() {
     }
 
-    public static List<CompassMarker> calculate(LocalPlayer localPlayer, List<AbstractClientPlayer> players, float partialTick) {
+    public static List<CompassMarker> calculate(LocalPlayer localPlayer, List<TrackedPlayer> players, float partialTick) {
         Vec3 localPosition = interpolatedPosition(localPlayer, partialTick);
         float viewYaw = localPlayer.getViewYRot(partialTick);
         List<CompassMarker> markers = new ArrayList<>();
 
-        for (AbstractClientPlayer player : players) {
+        for (TrackedPlayer player : players) {
             Vec3 targetPosition = interpolatedPosition(player, partialTick);
             double dx = targetPosition.x - localPosition.x;
             double dy = targetPosition.y - localPosition.y;
@@ -38,19 +37,28 @@ public final class CompassMarkerCalculator {
             float alpha = alphaForAngle(relativeAngle);
             float size = sizeForDistance(distance);
             float brightness = brightnessForHeight(dy, horizontalDistance);
-            int color = colorFromUuid(player.getUUID());
+            int color = colorFromUuid(player.playerId());
 
-            markers.add(new CompassMarker(player.getUUID(), x, size, brightness, alpha, distance, color));
+            markers.add(new CompassMarker(player.playerId(), x, size, brightness, alpha, distance, color));
         }
 
         markers.sort(Comparator.comparingDouble(CompassMarker::distance).reversed());
         return markers;
     }
 
-    private static Vec3 interpolatedPosition(AbstractClientPlayer player, float partialTick) {
+    private static Vec3 interpolatedPosition(LocalPlayer player, float partialTick) {
         double x = Mth.lerp(partialTick, player.xo, player.getX());
         double y = Mth.lerp(partialTick, player.yo, player.getY());
         double z = Mth.lerp(partialTick, player.zo, player.getZ());
+        return new Vec3(x, y, z);
+    }
+
+    private static Vec3 interpolatedPosition(TrackedPlayer player, float partialTick) {
+        Vec3 previous = player.previousPosition();
+        Vec3 current = player.currentPosition();
+        double x = Mth.lerp(partialTick, previous.x, current.x);
+        double y = Mth.lerp(partialTick, previous.y, current.y);
+        double z = Mth.lerp(partialTick, previous.z, current.z);
         return new Vec3(x, y, z);
     }
 
