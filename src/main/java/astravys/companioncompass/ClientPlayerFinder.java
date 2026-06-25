@@ -27,7 +27,7 @@ public final class ClientPlayerFinder {
         }
 
         ResourceKey<Level> localDimension = localPlayer.level().dimension();
-        if (lastLocalDimension != null && lastLocalDimension != localDimension) {
+        if (lastLocalDimension != null && !lastLocalDimension.equals(localDimension)) {
             ServerPlayerSnapshotStore.clear();
         }
         lastLocalDimension = localDimension;
@@ -46,7 +46,7 @@ public final class ClientPlayerFinder {
                 continue;
             }
             ResourceKey<Level> playerDimension = player.level().dimension();
-            if (playerDimension != localDimension) {
+            if (!playerDimension.equals(localDimension)) {
                 continue;
             }
             players.add(new TrackedPlayer(

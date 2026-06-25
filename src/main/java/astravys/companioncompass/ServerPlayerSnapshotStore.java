@@ -26,12 +26,10 @@ public final class ServerPlayerSnapshotStore {
 
         Map<UUID, TrackedPlayer> nextPlayers = new HashMap<>();
         for (PlayerPositionsPayload.Entry entry : payload.entries()) {
-            TrackedPlayer previous = TRACKED_PLAYERS.get(entry.playerId());
-            Vec3 previousPosition = previous == null ? entry.position() : previous.currentPosition();
             nextPlayers.put(entry.playerId(), new TrackedPlayer(
                     entry.playerId(),
                     entry.dimension(),
-                    previousPosition,
+                    entry.position(),
                     entry.position()));
         }
 
@@ -49,7 +47,7 @@ public final class ServerPlayerSnapshotStore {
 
         List<TrackedPlayer> players = new ArrayList<>();
         for (TrackedPlayer player : TRACKED_PLAYERS.values()) {
-            if (player.dimension() == localDimension) {
+            if (player.dimension().equals(localDimension)) {
                 players.add(player);
             }
         }

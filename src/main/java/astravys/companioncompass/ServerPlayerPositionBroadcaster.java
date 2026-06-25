@@ -35,7 +35,7 @@ public final class ServerPlayerPositionBroadcaster {
 
             List<PlayerPositionsPayload.Entry> entries = new ArrayList<>();
             for (ServerPlayer otherPlayer : players) {
-                if (otherPlayer == recipient || otherPlayer.level().dimension() != recipient.level().dimension()) {
+                if (otherPlayer == recipient || !otherPlayer.level().dimension().equals(recipient.level().dimension())) {
                     continue;
                 }
                 entries.add(new PlayerPositionsPayload.Entry(
