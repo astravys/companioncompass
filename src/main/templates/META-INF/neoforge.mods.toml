@@ -46,7 +46,7 @@ authors="astravys"
 
 # The description text for the mod (multi line!) (#mandatory)
 description='''
-A lightweight player locator for multiplayer survival. Shows direction and distance to nearby players without minimaps.
+A lightweight multiplayer compass HUD. Shows directional markers for players in the same dimension without minimaps, names, or coordinates.
 '''
 
 # The [[mixins]] block allows you to declare your mixin config to FML so that it gets loaded.
